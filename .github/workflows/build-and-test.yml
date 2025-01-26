@@ -1,0 +1,45 @@
+name: Build and Test
+
+on:
+  # Run this pipeline whenever code is pushed or a Pull Request is opened
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Check out your code
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      # 2. Set up JDK
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: 17
+
+      # 3. Cache Maven dependencies (Optional but speeds up builds)
+      - name: Cache Maven packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      # 4. Build & Test via Maven
+      - name: Build and Test
+        run: mvn clean verify
+
+      # 5. (Optional) Build Docker Image
+      - name: Build Docker image
+        run: |
+          docker build -t ilp_submission_image .
+          # If you want to test Docker run here or push to a registry, you can do so.
+          # docker run --rm -p 8080:8080 ilp_submission_image
+
